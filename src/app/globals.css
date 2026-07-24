@@ -1,0 +1,89 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* 
+   * 🎨 الألوان الأساسية (Primary Colors) - الأزرق الاحترافي
+   */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  --color-primary: var(--color-primary-700);
+
+  /* 
+   * 🌟 الألوان الثانوية (Secondary Colors) - العنبري/الذهبي
+   */
+  --color-secondary: #f59e0b;
+  --color-secondary-hover: #d97706;
+  --color-secondary-light: #fffbeb;
+}
+
+/* 
+ * ⚙️ متغيرات النظام - العودة إلى الألوان الأصلية
+ */
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+.dark {
+  --background: #020617;
+  /* Slate 950 */
+  --foreground: #f1f5f9;
+  /* Slate 100 */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  /* Enforce print styles */
+  .print\:hidden {
+    display: none !important;
+  }
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  .print\:w-full {
+    width: 100% !important;
+  }
+  .print\:m-0 {
+    margin: 0 !important;
+  }
+  .print\:absolute {
+    position: absolute !important;
+  }
+  .print\:top-0 {
+    top: 0 !important;
+  }
+}
+
+/* Hide number input arrows */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
