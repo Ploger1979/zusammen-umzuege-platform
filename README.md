@@ -1,13 +1,13 @@
-![Zusammen Umzuege Preview](preview.png)
+![Zusammen Umzuege Preview](./public/zusammenumzuege-preview.png)
 
 # ZusammenUmzuege – Website
-🌐 Live: https://zussammenumzuege.de/
+🌐 Live: https://zusammenumzuege.de/
 
 
 A modern, responsive website for a moving service (Umzug), built with **Next.js** and **TypeScript**.
 
 ## 🌐 Live Demo
-- https://zussammenumzuege.de/
+- https://zusammenumzuege.de/
 
 ## ✨ Features
 - Responsive layout (mobile/tablet/desktop)
