@@ -70,7 +70,7 @@ export default function InvoiceGenerator() {
                     setCustomerEmail(inv.customerEmail || '');
                     setSource(inv.source || 'Website');
                     setCompanyCity(inv.companyCity || '');
-                    setCompanyTaxId(inv.companyTaxId || '4080538293');
+                    setCompanyTaxId(inv.companyTaxId || '040 805 3416 8');
                     setInvoiceNr(inv.invoiceNr);
                     setInvoiceDate(new Date(inv.invoiceDate).toISOString().split('T')[0]);
                     setItems(inv.items);
@@ -134,7 +134,7 @@ export default function InvoiceGenerator() {
     const [customerEmail, setCustomerEmail] = useState('');
     const [source, setSource] = useState('Website');
     const [companyCity, setCompanyCity] = useState('');
-    const [companyTaxId, setCompanyTaxId] = useState('4080538293');
+    const [companyTaxId, setCompanyTaxId] = useState('040 805 3416 8');
 
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -225,7 +225,7 @@ export default function InvoiceGenerator() {
             setCustomerPhone('');
             setCustomerEmail('');
             setSource('Website');
-            setCompanyTaxId('4080538293');
+            setCompanyTaxId('040 805 3416 8');
             setCompanyCity('');
             setFromAddress('');
             setToAddress('');

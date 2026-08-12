@@ -71,7 +71,7 @@ export default function ImpressumPage() {
                     <section className="group">
                         <h2 className="text-xl font-medium mb-3 text-white uppercase tracking-wider group-hover:text-blue-400 transition-colors">Steuernummer</h2>
                         <p className="leading-relaxed font-light text-lg">
-                            <span className="text-white">4080538293</span>
+                            <span className="text-white">040 805 3416 8</span>
                         </p>
                     </section>
 
