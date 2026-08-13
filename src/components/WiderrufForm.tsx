@@ -232,7 +232,7 @@ Der Kunde hat bestätigt, den Vertrag hiermit fristgerecht und rechtsverbindlich
             doc.text('Zusammen Umzüge', 195, 18, { align: 'right' });
             doc.text('Inhaber: Mustapha Benlaaouni', 195, 22, { align: 'right' });
             doc.text('Zehnthofstraße 55, 55252 Mainz-Kastel', 195, 26, { align: 'right' });
-            doc.text('Steuernummer: 040 805 3416 8', 195, 30, { align: 'right' });
+            doc.text('Steuernummer: 040 805 34168', 195, 30, { align: 'right' });
             doc.text('E-Mail: info@zusammenumzuege.de | Tel: 01782722300', 195, 34, { align: 'right' });
 
             doc.setDrawColor(15, 23, 42);
@@ -683,7 +683,7 @@ Der Kunde hat bestätigt, den Vertrag hiermit fristgerecht und rechtsverbindlich
                         <p className="font-bold text-gray-900 text-xs">Zusammen Umzüge</p>
                         <p>Inhaber: Mustapha Benlaaouni</p>
                         <p>Zehnthofstraße 55, 55252 Mainz-Kastel</p>
-                        <p>Steuernummer: 040 805 3416 8</p>
+                        <p>Steuernummer: 040 805 34168</p>
                         <p>E-Mail: info@zusammenumzuege.de</p>
                         <p>Tel: 01782722300</p>
                     </div>

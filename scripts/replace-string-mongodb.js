@@ -16,9 +16,9 @@ async function run() {
             
             for (const doc of docs) {
                 let jsonStr = JSON.stringify(doc);
-                if (jsonStr.includes('4080538293')) {
-                    console.log(`Found "4080538293" in collection "${colInfo.name}" doc ID: ${doc._id}`);
-                    jsonStr = jsonStr.replace(/4080538293/g, '040 805 3416 8');
+                if (jsonStr.includes('4080538293') || jsonStr.includes('040 805 3416 8')) {
+                    console.log(`Found old tax ID in collection "${colInfo.name}" doc ID: ${doc._id}`);
+                    jsonStr = jsonStr.replace(/4080538293/g, '040 805 34168').replace(/040 805 3416 8/g, '040 805 34168');
                     const updatedDoc = JSON.parse(jsonStr);
                     delete updatedDoc._id; // Keep original _id
                     await col.replaceOne({ _id: doc._id }, updatedDoc);
