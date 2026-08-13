@@ -52,7 +52,7 @@ const InvoiceSchema: Schema = new Schema({
     companyOwner: { type: String, default: '' },
     companyAddress: { type: String, default: '' },
     companyCity: { type: String, default: '' },
-    companyTaxId: { type: String, default: '' },
+    companyTaxId: { type: String, default: '040 805 3416 8' },
     fromAddress: { type: String, default: '' },
     toAddress: { type: String, default: '' },
     distance: { type: String, default: '' },
