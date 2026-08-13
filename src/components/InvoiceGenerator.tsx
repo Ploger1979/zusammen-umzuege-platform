@@ -70,7 +70,9 @@ export default function InvoiceGenerator() {
                     setCustomerEmail(inv.customerEmail || '');
                     setSource(inv.source || 'Website');
                     setCompanyCity(inv.companyCity || '');
-                    setCompanyTaxId(inv.companyTaxId || '040 805 34168');
+                    const loadedTaxId = inv.companyTaxId;
+                    const finalTaxId = (!loadedTaxId || loadedTaxId === '4080538293' || loadedTaxId === '040 805 3416 8') ? '040 805 34168' : loadedTaxId;
+                    setCompanyTaxId(finalTaxId);
                     setInvoiceNr(inv.invoiceNr);
                     setInvoiceDate(new Date(inv.invoiceDate).toISOString().split('T')[0]);
                     setItems(inv.items);
