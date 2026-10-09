@@ -174,14 +174,16 @@ export default function AdminInvoicesPage() {
                                         >
                                             Rechnung ansehen / bearbeiten
                                         </Link>
-                                        <button
-                                            onClick={() => setInvoiceToDelete(inv.requestId)}
-                                            className="px-4 py-2 bg-red-100 text-red-700 font-bold rounded border border-red-300 hover:bg-red-200 transition flex justify-center items-center gap-2"
-                                            title="Rechnung löschen"
-                                        >
-                                            <Trash2 size={18} />
-                                            Löschen
-                                        </button>
+                                        {isSuperAdmin && (
+                                            <button
+                                                onClick={() => setInvoiceToDelete(inv.requestId)}
+                                                className="px-4 py-2 bg-red-100 text-red-700 font-bold rounded border border-red-300 hover:bg-red-200 transition flex justify-center items-center gap-2"
+                                                title="Rechnung löschen"
+                                            >
+                                                <Trash2 size={18} />
+                                                Löschen
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}

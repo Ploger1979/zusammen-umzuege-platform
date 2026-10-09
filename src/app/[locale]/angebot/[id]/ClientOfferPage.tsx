@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, Printer } from 'lucide-react';
+import { CheckCircle2, Printer, Truck } from 'lucide-react';
 
 export default function ClientOfferPage({ offer, locale }: { offer: any, locale: string }) {
     
@@ -17,6 +17,7 @@ export default function ClientOfferPage({ offer, locale }: { offer: any, locale:
 
     const fixedPrice = offer.pricing?.fixedPrice || 0;
     const taxMode = offer.pricing?.taxMode || 'inkl_mwst';
+    const companyTaxId = offer.companyTaxId || '040 805 34168';
 
     return (
         <div className="min-h-screen bg-gray-100 py-8 px-4 flex flex-col items-center print:bg-white print:p-0 print:m-0">
@@ -87,7 +88,7 @@ export default function ClientOfferPage({ offer, locale }: { offer: any, locale:
                             <p className="text-xs text-gray-600 leading-tight">
                                 <strong className="text-sm text-[#16a34a]">Zusammen Umzüge</strong><br />
                                 Ihr zuverlässiger Partner.<br />
-                                Zehnthofstrasse 55<br />
+                                Zenthofstrasse 55<br />
                                 55252 Wiesbaden
                             </p>
                         </div>
@@ -97,14 +98,15 @@ export default function ClientOfferPage({ offer, locale }: { offer: any, locale:
                         <div className="text-end z-10">
                             <h1 className="text-xl font-extrabold text-[#16a34a] uppercase tracking-wider mb-2 whitespace-nowrap">UMZUGSANGEBOT</h1>
                             <p className="text-sm font-bold text-gray-600 whitespace-nowrap"><span className="text-[#16a34a]">Angebots-Nr.:</span> <span className="text-black text-lg">{offer.offerNr}</span></p>
+                            {companyTaxId && <p className="text-sm font-bold text-[#16a34a] whitespace-nowrap">Steuer-Nr.: <span className="text-black">{companyTaxId}</span></p>}
                             <p className="text-sm font-bold text-gray-600 whitespace-nowrap"><span className="text-[#16a34a]">Datum:</span> <span className="text-black">{new Date(offer.offerDate).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US')}</span></p>
                             <p className="text-sm font-bold text-gray-600 whitespace-nowrap"><span className="text-[#16a34a]">Gültig bis:</span> <span className="text-black">{new Date(offer.validUntil).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US')}</span></p>
                         </div>
                     </div>
 
                     {/* Customer & Document Titles */}
-                    <div className="mb-8 print:mb-4">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase mb-1 print:mb-0.5">Kundeninformation</h3>
+                    <div className="mb-6 print:mb-3">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase mb-1 print:mb-0.5">Kundeninformation (Rechnungsadresse)</h3>
                         <div className="flex justify-between items-start bg-transparent p-4 print:p-2 rounded-lg border border-gray-100">
                             <div className="text-base font-bold text-gray-900 leading-relaxed">
                                 {offer.customerName}<br />
@@ -119,6 +121,47 @@ export default function ClientOfferPage({ offer, locale }: { offer: any, locale:
                             </div>
                         </div>
                     </div>
+
+                    {/* Umzugsdaten / Route (Von -> Nach) */}
+                    {(offer.fromAddress || offer.toAddress) && (
+                        <div className="bg-transparent border-s-4 border-[#16a34a] p-4 print:p-2.5 mb-6 print:mb-3 rounded-e-lg bg-green-50/20">
+                            <div className="flex justify-between items-center mb-2 print:mb-1 border-b border-[#16a34a]/20 pb-1.5">
+                                <h3 className="text-xs font-bold text-[#16a34a] uppercase flex items-center gap-2">
+                                    <Truck size={14} /> Umzugsdaten / Route
+                                </h3>
+                                <div className="flex items-center gap-4 text-xs font-semibold text-gray-700">
+                                    {offer.moveDate && (
+                                        <span>
+                                            <span className="text-gray-500 font-normal">Termin: </span>
+                                            <span className="text-gray-900 font-bold">{new Date(offer.moveDate).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US')}</span>
+                                        </span>
+                                    )}
+                                    {offer.distance && (
+                                        <span>
+                                            <span className="text-gray-500 font-normal">Strecke: </span>
+                                            <span className="text-gray-900 font-bold">{offer.distance.includes('km') ? offer.distance : `ca. ${offer.distance} km`}</span>
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 print:gap-y-1 text-sm print:text-[13px] text-gray-800 pt-0.5">
+                                <div className="flex flex-col border-b sm:border-b-0 border-[#16a34a]/20 pb-1 sm:pb-0">
+                                    <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Beladeadresse (Auszug):</span>
+                                    <span className="font-medium whitespace-pre-line text-gray-900">{offer.fromAddress || 'Keine Angabe'}</span>
+                                    <span className="text-xs text-gray-600 mt-0.5 font-semibold">
+                                        {offer.floorFrom ? `${offer.floorFrom}. OG` : 'EG/Erdgeschoss'} | {offer.elevatorFrom ? 'Mit Aufzug' : 'Ohne Aufzug'}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Entladeadresse (Einzug):</span>
+                                    <span className="font-medium whitespace-pre-line text-gray-900">{offer.toAddress || 'Keine Angabe'}</span>
+                                    <span className="text-xs text-gray-600 mt-0.5 font-semibold">
+                                        {offer.floorTo ? `${offer.floorTo}. OG` : 'EG/Erdgeschoss'} | {offer.elevatorTo ? 'Mit Aufzug' : 'Ohne Aufzug'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mb-6 print:mb-3 text-center">
                         <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-wide">Ihr persönliches Umzugsangebot</h2>

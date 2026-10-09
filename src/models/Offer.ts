@@ -12,6 +12,16 @@ export interface IOffer extends Document {
     customerPhone: string;
     customerEmail: string;
 
+    fromAddress: string;
+    toAddress: string;
+    floorFrom?: string;
+    floorTo?: string;
+    elevatorFrom?: boolean;
+    elevatorTo?: boolean;
+    distance?: string;
+    moveDate?: string;
+    companyTaxId?: string;
+
     viewingType: 'besichtigung_vor_ort' | 'online_besichtigung' | 'telefonische_beratung';
     greetingText: string;
     
@@ -41,6 +51,16 @@ const OfferSchema: Schema = new Schema({
     customerCity: { type: String, default: '' },
     customerPhone: { type: String, default: '' },
     customerEmail: { type: String, default: '' },
+
+    fromAddress: { type: String, default: '' },
+    toAddress: { type: String, default: '' },
+    floorFrom: { type: String, default: '' },
+    floorTo: { type: String, default: '' },
+    elevatorFrom: { type: Boolean, default: false },
+    elevatorTo: { type: Boolean, default: false },
+    distance: { type: String, default: '' },
+    moveDate: { type: String, default: '' },
+    companyTaxId: { type: String, default: '040 805 34168' },
 
     viewingType: { 
         type: String, 

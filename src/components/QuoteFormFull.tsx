@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, MessageCircle, Armchair } from 'lucide-react';
 import SplitAddressAutocomplete from './SplitAddressAutocomplete';
 
 type ItemKey = 'cartons';
@@ -12,15 +12,40 @@ interface ItemState {
     qty: number;
 }
 
+const FURNITURE_CHIPS = [
+    'Bett',
+    'Schrank',
+    'Sofa',
+    'Esstisch & Stühle',
+    'Waschmaschine',
+    'Trockner',
+    'Küche',
+    'Kühlschrank',
+    'Herd',
+    'Schreibtisch',
+    'TV / Fernseher',
+    'Kommode'
+];
+
 export default function QuoteFormFull() {
     const t = useTranslations('QuoteFormFull');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [inventoryText, setInventoryText] = useState('');
+    const [whatsappUrl, setWhatsappUrl] = useState('');
 
     // Item States
     const [items, setItems] = useState<Record<ItemKey, ItemState>>({
         cartons: { active: false, qty: 10 },
     });
+
+    const handleAddChip = (item: string) => {
+        setInventoryText(prev => {
+            const trimmed = prev.trim();
+            if (!trimmed) return `• 1x ${item}`;
+            return `${trimmed}\n• 1x ${item}`;
+        });
+    };
 
     const updateItem = (key: ItemKey, updates: Partial<ItemState>) => {
         setItems(prev => ({ ...prev, [key]: { ...prev[key], ...updates } }));
@@ -65,7 +90,46 @@ export default function QuoteFormFull() {
             },
             items: itemsList,
             message: fd.get('message'),
+            inventoryText,
         };
+
+        const firstName = String(fd.get('firstName') || '');
+        const lastName = String(fd.get('lastName') || '');
+        const phone = String(fd.get('phone') || '');
+        const fromStreet = String(fd.get('addressFromStreet') || '');
+        const fromCity = String(fd.get('addressFromCity') || '');
+        const toStreet = String(fd.get('addressToStreet') || '');
+        const toCity = String(fd.get('addressToCity') || '');
+        const floorsFrom = fd.get('floorsFrom') || '0';
+        const elevatorFrom = fd.get('elevatorFrom') === 'on' ? 'Ja' : 'Nein';
+        const floorsTo = fd.get('floorsTo') || '0';
+        const elevatorTo = fd.get('elevatorTo') === 'on' ? 'Ja' : 'Nein';
+        const rawDate = fd.get('date');
+        const moveDate = rawDate ? new Date(String(rawDate)).toLocaleDateString('de-DE') : 'Nach Absprache';
+        const cartonsInfo = items.cartons.active ? `ca. ${items.cartons.qty} Stück` : 'Keine';
+
+        const waMessage = `Hallo Zusammen Umzüge,\n` +
+            `ich habe soeben eine Umzugsanfrage über Ihre Webseite gestellt:\n\n` +
+            `✦ *Kunde:* ${firstName} ${lastName}\n` +
+            `✆ *Telefon:* ${phone}\n\n` +
+            `⦿ *Auszug (Von):* ${fromStreet}, ${fromCity}\n` +
+            `  Etage: ${floorsFrom}. OG | Aufzug: ${elevatorFrom}\n\n` +
+            `⚑ *Einzug (Nach):* ${toStreet}, ${toCity}\n` +
+            `  Etage: ${floorsTo}. OG | Aufzug: ${elevatorTo}\n\n` +
+            (inventoryText.trim() ? `❖ *Möbelliste / Inventar:*\n${inventoryText.trim()}\n\n` : '') +
+            `◆ *Kartons:* ${cartonsInfo}\n` +
+            `✦ *Wunschtermin:* ${moveDate}\n\n` +
+            `✓ Bitte senden Sie mir ein unverbindliches Angebot. Vielen Dank!`;
+
+        const waUrl = `https://api.whatsapp.com/send?phone=491782722300&text=${encodeURIComponent(waMessage)}`;
+        setWhatsappUrl(waUrl);
+
+        // Auto-open WhatsApp immediately in user gesture context so popup blocker allows it
+        try {
+            window.open(waUrl, '_blank');
+        } catch (e) {
+            console.error('Auto open WhatsApp failed:', e);
+        }
 
         try {
             const res = await fetch('/api/requests', {
@@ -85,12 +149,42 @@ export default function QuoteFormFull() {
 
     if (success) {
         return (
-            <div className="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-lg text-center transition-colors duration-300">
-                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-4xl">✓</span>
+            <div className="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-2xl shadow-xl text-center transition-colors duration-300 max-w-2xl mx-auto border border-gray-100 dark:border-gray-700">
+                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <span className="text-4xl font-bold">✓</span>
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('successTitle')}</h2>
-                <p className="text-xl text-gray-600 dark:text-gray-300">{t('successMsg')}</p>
+                <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-3">Vielen Dank!</h2>
+                <p className="text-base text-gray-600 dark:text-gray-300 max-w-lg mx-auto mb-8 leading-relaxed">
+                    Ihre Anfrage wurde erfolgreich gespeichert und gleichzeitig an unser WhatsApp-Team weitergeleitet.
+                </p>
+
+                {/* Direct WhatsApp Call to Action / Fallback */}
+                {whatsappUrl && (
+                    <div className="p-6 bg-green-50/80 dark:bg-green-900/20 border-2 border-green-500/40 rounded-2xl shadow-sm text-center">
+                        <div className="inline-flex items-center gap-2 text-green-700 dark:text-green-400 font-bold text-xs uppercase tracking-wider mb-2 bg-green-100 dark:bg-green-900/40 px-3 py-1 rounded-full">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                            WhatsApp Chat geöffnet
+                        </div>
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                            WhatsApp Chat auf Ihrem Gerät
+                        </h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-5 max-w-md mx-auto">
+                            Falls sich WhatsApp nicht automatisch geöffnet hat, klicken Sie einfach hier:
+                        </p>
+                        <a
+                            href={whatsappUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 text-base w-full sm:w-auto"
+                        >
+                            <MessageCircle size={22} className="fill-white" />
+                            <span>WhatsApp Chat manuell öffnen</span>
+                        </a>
+                        <p className="text-[11px] text-gray-400 mt-3">
+                            Direkt an: +49 178 2722300 (Zusammen Umzüge)
+                        </p>
+                    </div>
+                )}
             </div>
         );
     }
@@ -233,6 +327,55 @@ export default function QuoteFormFull() {
                         )}
                     </div>
                 </div>
+
+                {/* Auflistung des Umzugsguts (Möbelliste) */}
+                <div className="pt-6 border-t dark:border-gray-700 mt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <div>
+                            <h4 className="font-bold text-gray-900 dark:text-white text-base flex items-center gap-2">
+                                <Armchair size={18} className="text-[#16a34a]" />
+                                Auflistung des Umzugsguts (Möbelliste)
+                            </h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                Klicken Sie auf die Schnellauswahl oder tragen Sie Ihre Möbel und Gegenstände ein:
+                            </p>
+                        </div>
+                        {inventoryText && (
+                            <button
+                                type="button"
+                                onClick={() => setInventoryText('')}
+                                className="text-xs text-red-500 hover:text-red-700 self-start sm:self-auto font-medium hover:underline"
+                            >
+                                Liste leeren
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Quick-Click Chips */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                        {FURNITURE_CHIPS.map((item) => (
+                            <button
+                                key={item}
+                                type="button"
+                                onClick={() => handleAddChip(item)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 hover:bg-green-100 text-gray-800 hover:text-green-800 dark:bg-gray-700 dark:hover:bg-green-900/40 dark:text-gray-200 dark:hover:text-green-300 border border-gray-200 dark:border-gray-600 transition-all active:scale-95 shadow-sm"
+                            >
+                                <Plus size={13} className="text-[#16a34a]" />
+                                {item}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Textarea */}
+                    <textarea
+                        name="inventoryText"
+                        value={inventoryText}
+                        onChange={(e) => setInventoryText(e.target.value)}
+                        rows={4}
+                        placeholder="Ihre Möbelliste (z.B. 1x Bett, 1x Kleiderschrank, 1x Sofa, 1x Esstisch mit 4 Stühlen, 1x Waschmaschine, 1x Herd, 1x Schreibtisch...)"
+                        className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 text-sm font-sans"
+                    />
+                </div>
             </section>
 
             {/* Step 3: Date */}
@@ -257,8 +400,19 @@ export default function QuoteFormFull() {
                 <textarea name="message" placeholder={t('msgPlaceholder')} className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-lg h-32 focus:ring-2 focus:ring-primary outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400"></textarea>
             </section>
 
-            <button disabled={loading} type="submit" className="w-full bg-secondary hover:bg-secondary-hover text-white text-lg font-bold py-4 rounded-xl transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                {loading ? <Loader2 className="animate-spin" /> : t('submit')}
+            <button 
+                disabled={loading} 
+                type="submit" 
+                className="w-full bg-[#16a34a] hover:bg-[#15803d] text-white text-lg font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            >
+                {loading ? (
+                    <Loader2 className="animate-spin" size={24} />
+                ) : (
+                    <>
+                        <MessageCircle size={24} className="fill-white" />
+                        <span>Jetzt Angebot anfordern & per WhatsApp senden</span>
+                    </>
+                )}
             </button>
 
         </form>

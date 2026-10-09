@@ -34,6 +34,7 @@ export interface IRequest extends Document {
         label?: string;
     }>;
     message?: string;
+    inventoryText?: string;
     status: 'new' | 'contacted' | 'scheduled' | 'done';
     createdAt: Date;
 }
@@ -72,6 +73,7 @@ const RequestSchema: Schema = new Schema({
         label: String
     }],
     message: String,
+    inventoryText: { type: String, default: '' },
     status: { type: String, enum: ['new', 'contacted', 'scheduled', 'done'], default: 'new' },
 }, { timestamps: true });
 

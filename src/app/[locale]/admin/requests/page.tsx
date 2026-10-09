@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Shield, ArrowLeft, Loader2, Calendar, FileText, ArrowRight, LogOut, Receipt } from 'lucide-react';
+import { Shield, ArrowLeft, Loader2, Calendar, FileText, ArrowRight, LogOut, Receipt, Trash2 } from 'lucide-react';
 import { getAdminSession } from '@/app/actions/auth';
 import Link from 'next/link';
 
@@ -19,6 +19,7 @@ interface RequestData {
     createdAt: string;
     status: string;
     items: Array<{ key: string; qty: number }>;
+    inventoryText?: string;
     hasInvoice?: boolean;
 }
 
@@ -30,6 +31,8 @@ export default function AdminRequestsPage() {
     const [requests, setRequests] = useState<RequestData[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+    const [requestToDelete, setRequestToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         loadRequests();
@@ -80,6 +83,27 @@ export default function AdminRequestsPage() {
             console.error('Failed to load requests', error);
         }
         setLoading(false);
+    }
+
+    async function confirmDelete() {
+        if (!requestToDelete) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/requests/${requestToDelete}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (data.success) {
+                setRequests(prev => prev.filter(req => req._id !== requestToDelete));
+                setRequestToDelete(null);
+            } else {
+                alert('Fehler beim Löschen der Anfrage: ' + (data.error || 'Unbekannter Fehler'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Ein unerwarteter Fehler ist aufgetreten.');
+        }
+        setIsDeleting(false);
     }
 
     return (
@@ -166,6 +190,14 @@ export default function AdminRequestsPage() {
                                                 )}
                                             </span>
                                         </div>
+                                        {req.inventoryText && (
+                                            <div className="mt-2.5 p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 text-xs text-gray-800 dark:text-gray-200 max-w-xl">
+                                                <span className="font-bold text-[#16a34a] block mb-0.5">🛋️ Möbelliste / Inventar:</span>
+                                                <p className="whitespace-pre-line font-mono text-[11px] leading-relaxed line-clamp-3 hover:line-clamp-none transition-all">
+                                                    {req.inventoryText}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -190,6 +222,16 @@ export default function AdminRequestsPage() {
                                                 {t('createInvoice')} <ArrowRight size={16} className="rtl:rotate-180" />
                                             </Link>
                                         )}
+                                        {isSuperAdmin && (
+                                            <button
+                                                onClick={() => setRequestToDelete(req._id)}
+                                                className="flex-1 md:flex-none px-4 py-2 bg-red-100 text-red-700 font-bold rounded border border-red-300 hover:bg-red-200 transition flex justify-center items-center gap-2"
+                                                title="Anfrage löschen"
+                                            >
+                                                <Trash2 size={18} />
+                                                Löschen
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -212,6 +254,43 @@ export default function AdminRequestsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Professional Delete Confirmation Modal (SuperAdmin only) */}
+            {requestToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300">
+                    <div className="bg-white dark:bg-[#1e293b] rounded-2xl p-6 md:p-8 max-w-sm md:max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700 animate-in fade-in zoom-in duration-200">
+                        <div className="flex flex-col items-center text-center space-y-4">
+                            <div className="w-16 h-16 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-500 rounded-full flex items-center justify-center mb-2 shadow-inner">
+                                <Trash2 size={32} />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                Anfrage löschen?
+                            </h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm px-2">
+                                Sind Sie sicher, dass Sie diese Anfrage endgültig löschen möchten? <br />
+                                <strong className="text-red-600 dark:text-red-400">Hinweis:</strong> Alle zugehörigen Angebote und Rechnungen werden ebenfalls vollständig aus der Datenbank gelöscht.
+                            </p>
+                            <div className="flex gap-3 w-full mt-8">
+                                <button
+                                    onClick={() => setRequestToDelete(null)}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-xl transition-colors disabled:opacity-50 border border-gray-200 dark:border-gray-700 shadow-sm"
+                                >
+                                    Abbrechen
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 disabled:opacity-50 shadow-md hover:shadow-lg"
+                                >
+                                    {isDeleting ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
+                                    {isDeleting ? 'Wird gelöscht...' : 'Ja, löschen'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

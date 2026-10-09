@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
-import { ArrowLeft, CheckCircle2, Printer, Save, Trash2, Mail, MessageCircle, Plus } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Printer, Save, Trash2, Mail, MessageCircle, Plus, Truck } from 'lucide-react';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -33,6 +33,18 @@ export default function OfferGenerator() {
     const [customerCity, setCustomerCity] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [customerEmail, setCustomerEmail] = useState('');
+
+    const COMPANY_TAX_ID = '040 805 34168';
+
+    // Route & Move Details
+    const [fromAddress, setFromAddress] = useState('');
+    const [toAddress, setToAddress] = useState('');
+    const [floorFrom, setFloorFrom] = useState('');
+    const [floorTo, setFloorTo] = useState('');
+    const [elevatorFrom, setElevatorFrom] = useState(false);
+    const [elevatorTo, setElevatorTo] = useState(false);
+    const [distance, setDistance] = useState('');
+    const [moveDate, setMoveDate] = useState('');
     
     const [offerDate, setOfferDate] = useState(new Date().toISOString().split('T')[0]);
     
@@ -78,6 +90,16 @@ export default function OfferGenerator() {
                     setCustomerCity(off.customerCity || '');
                     setCustomerPhone(off.customerPhone || '');
                     setCustomerEmail(off.customerEmail || '');
+
+                    setFromAddress(off.fromAddress || '');
+                    setToAddress(off.toAddress || '');
+                    setFloorFrom(off.floorFrom || '');
+                    setFloorTo(off.floorTo || '');
+                    setElevatorFrom(off.elevatorFrom || false);
+                    setElevatorTo(off.elevatorTo || false);
+                    setDistance(off.distance || '');
+                    setMoveDate(off.moveDate || '');
+
                     setOfferDate(new Date(off.offerDate).toISOString().split('T')[0]);
                     setValidUntil(new Date(off.validUntil).toISOString().split('T')[0]);
                     setOfferNr(off.offerNr);
@@ -112,6 +134,25 @@ export default function OfferGenerator() {
                     setCustomerCity(addrParts[1] || '');
                     setCustomerPhone(r.customer.phone || '');
                     setCustomerEmail(r.customer.email || '');
+
+                    setFromAddress(formatGermanAddress(r.addresses?.from || ''));
+                    setToAddress(formatGermanAddress(r.addresses?.to || ''));
+                    setFloorFrom(r.details?.floorsFrom ? String(r.details.floorsFrom) : '');
+                    setFloorTo(r.details?.floorsTo ? String(r.details.floorsTo) : '');
+                    setElevatorFrom(r.details?.elevatorFrom || false);
+                    setElevatorTo(r.details?.elevatorTo || false);
+                    if (r.details?.date) {
+                        setMoveDate(new Date(r.details.date).toISOString().split('T')[0]);
+                    }
+                    if (r.inventoryText) {
+                        const parsedItems = r.inventoryText
+                            .split('\n')
+                            .map((line: string) => line.replace(/^[•\-\*]\s*/, '').trim())
+                            .filter(Boolean);
+                        if (parsedItems.length > 0) {
+                            setInventoryList(parsedItems);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error loading request data', error);
@@ -156,6 +197,15 @@ export default function OfferGenerator() {
                 customerCity,
                 customerPhone,
                 customerEmail,
+                fromAddress,
+                toAddress,
+                floorFrom,
+                floorTo,
+                elevatorFrom,
+                elevatorTo,
+                distance,
+                moveDate,
+                companyTaxId: COMPANY_TAX_ID,
                 viewingType,
                 greetingText,
                 includedServices: activeServices,
@@ -363,19 +413,25 @@ export default function OfferGenerator() {
                                 <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none" />
                             </div>
                         </div>
-                        <div>
-                            <label className="text-xs text-gray-500 mb-1 block">Besichtigungsart</label>
-                            <select value={viewingType} onChange={e => setViewingType(e.target.value)} className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none">
-                                <option value="besichtigung_vor_ort">Besichtigung vor Ort</option>
-                                <option value="online_besichtigung">Online-Besichtigung</option>
-                                <option value="telefonische_beratung">Telefonische Beratung</option>
-                            </select>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1 block">Besichtigungsart</label>
+                                <select value={viewingType} onChange={e => setViewingType(e.target.value)} className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none">
+                                    <option value="besichtigung_vor_ort">Besichtigung vor Ort</option>
+                                    <option value="online_besichtigung">Online-Besichtigung</option>
+                                    <option value="telefonische_beratung">Telefonische Beratung</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1 block">Geplanter Umzugstermin</label>
+                                <input type="date" value={moveDate} onChange={e => setMoveDate(e.target.value)} className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none" />
+                            </div>
                         </div>
                     </div>
 
                     {/* Customer Info */}
                     <div className="space-y-3 p-4 bg-gray-50 dark:bg-[#0f172a] rounded-lg border border-gray-200 dark:border-gray-700">
-                        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Kunde</h3>
+                        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Kunde (Rechnungsadresse)</h3>
                         <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Name des Kunden" className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none" />
                         <AddressAutocomplete 
                             placeholder="Straße und Hausnummer" 
@@ -396,6 +452,63 @@ export default function OfferGenerator() {
                         <div className="grid grid-cols-2 gap-3">
                             <input type="text" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="Telefon" className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none" />
                             <input type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="E-Mail" className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none" />
+                        </div>
+                    </div>
+
+                    {/* Move Route & Details */}
+                    <div className="space-y-3 p-4 bg-gray-50 dark:bg-[#0f172a] rounded-lg border border-gray-200 dark:border-gray-700">
+                        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+                            <Truck size={16} className="text-[#16a34a]" /> Umzugsdaten / Route (Von → Nach)
+                        </h3>
+                        
+                        {/* Beladeadresse (Von) */}
+                        <div className="space-y-2 border-l-2 border-blue-500 pl-3">
+                            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block">Auszug (Beladeadresse)</label>
+                            <AddressAutocomplete 
+                                placeholder="Adresse Beladeort..." 
+                                value={fromAddress} 
+                                onChange={(val: string) => setFromAddress(val)} 
+                                rows={1} 
+                                className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none" 
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <input type="text" value={floorFrom} onChange={e => setFloorFrom(e.target.value)} placeholder="Etage (z.B. 2. OG)" className="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-xs text-gray-900 dark:text-white focus:outline-none" />
+                                <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 cursor-pointer">
+                                    <input type="checkbox" checked={elevatorFrom} onChange={e => setElevatorFrom(e.target.checked)} className="w-4 h-4 text-[#16a34a] rounded" />
+                                    Aufzug vorhanden
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Entladeadresse (Nach) */}
+                        <div className="space-y-2 border-l-2 border-green-500 pl-3 pt-2">
+                            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block">Einzug (Entladeadresse)</label>
+                            <AddressAutocomplete 
+                                placeholder="Adresse Entladeort..." 
+                                value={toAddress} 
+                                onChange={(val: string) => setToAddress(val)} 
+                                rows={1} 
+                                className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none" 
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <input type="text" value={floorTo} onChange={e => setFloorTo(e.target.value)} placeholder="Etage (z.B. 1. OG)" className="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-xs text-gray-900 dark:text-white focus:outline-none" />
+                                <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 cursor-pointer">
+                                    <input type="checkbox" checked={elevatorTo} onChange={e => setElevatorTo(e.target.checked)} className="w-4 h-4 text-[#16a34a] rounded" />
+                                    Aufzug vorhanden
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Entfernung / Strecke */}
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1">Fahrstrecke / Entfernung (ca. km)</label>
+                            <input 
+                                type="text" 
+                                value={distance} 
+                                onChange={e => setDistance(e.target.value)} 
+                                placeholder="z.B. ca. 35 km" 
+                                className="w-full bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-600 rounded p-2 text-xs text-gray-900 dark:text-white focus:outline-none" 
+                            />
                         </div>
                     </div>
 
@@ -566,14 +679,15 @@ export default function OfferGenerator() {
                             <div className="text-end z-10">
                                 <h1 className="text-xl font-extrabold text-[#16a34a] uppercase tracking-wider mb-2 whitespace-nowrap">UMZUGSANGEBOT</h1>
                                 <p className="text-sm font-bold text-gray-600 whitespace-nowrap"><span className="text-[#16a34a]">Angebots-Nr.:</span> <span className="text-black text-lg">{offerNr || <span className="text-gray-400 italic font-normal text-sm">Wird generiert</span>}</span></p>
+                                <p className="text-sm font-bold text-[#16a34a] whitespace-nowrap">Steuer-Nr.: <span className="text-black">{COMPANY_TAX_ID}</span></p>
                                 <p className="text-sm font-bold text-gray-600 whitespace-nowrap"><span className="text-[#16a34a]">Datum:</span> <span className="text-black">{new Date(offerDate).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US')}</span></p>
                                 <p className="text-sm font-bold text-gray-600 whitespace-nowrap"><span className="text-[#16a34a]">Gültig bis:</span> <span className="text-black">{new Date(validUntil).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US')}</span></p>
                             </div>
                         </div>
 
                         {/* Customer & Document Titles */}
-                        <div className="mb-8 print:mb-4">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase mb-1 print:mb-0.5">Kundeninformation</h3>
+                        <div className="mb-6 print:mb-3">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase mb-1 print:mb-0.5">Kundeninformation (Rechnungsadresse)</h3>
                             <div className="flex justify-between items-start bg-transparent p-4 print:p-2 rounded-lg border border-gray-100">
                                 <div className="text-base font-bold text-gray-900 leading-relaxed">
                                     {customerName || 'Musterkunde Name'}<br />
@@ -585,6 +699,45 @@ export default function OfferGenerator() {
                                 <div className="text-end text-sm text-gray-600 space-y-1">
                                     {customerPhone && <p className="whitespace-nowrap"><span className="text-gray-400 mr-2">Tel:</span> <span className="font-bold text-gray-900">{customerPhone}</span></p>}
                                     {customerEmail && <p className="whitespace-nowrap"><span className="text-gray-400 mr-2">E-Mail:</span> <span className="font-bold text-gray-900">{customerEmail}</span></p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Umzugsdaten / Route (Von -> Nach) */}
+                        <div className="bg-transparent border-s-4 border-[#16a34a] p-4 print:p-2.5 mb-6 print:mb-3 rounded-e-lg bg-green-50/20">
+                            <div className="flex justify-between items-center mb-2 print:mb-1 border-b border-[#16a34a]/20 pb-1.5">
+                                <h3 className="text-xs font-bold text-[#16a34a] uppercase flex items-center gap-2">
+                                    <Truck size={14} /> Umzugsdaten / Route
+                                </h3>
+                                <div className="flex items-center gap-4 text-xs font-semibold text-gray-700">
+                                    {moveDate && (
+                                        <span>
+                                            <span className="text-gray-500 font-normal">Termin: </span>
+                                            <span className="text-gray-900 font-bold">{new Date(moveDate).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US')}</span>
+                                        </span>
+                                    )}
+                                    {distance && (
+                                        <span>
+                                            <span className="text-gray-500 font-normal">Strecke: </span>
+                                            <span className="text-gray-900 font-bold">{distance.includes('km') ? distance : `ca. ${distance} km`}</span>
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 print:gap-y-1 text-sm print:text-[13px] text-gray-800 pt-0.5">
+                                <div className="flex flex-col border-b sm:border-b-0 border-[#16a34a]/20 pb-1 sm:pb-0">
+                                    <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Beladeadresse (Auszug):</span>
+                                    <span className="font-medium whitespace-pre-line text-gray-900">{fromAddress || 'Keine Angabe'}</span>
+                                    <span className="text-xs text-gray-600 mt-0.5 font-semibold">
+                                        {floorFrom ? `${floorFrom}. OG` : 'EG/Erdgeschoss'} | {elevatorFrom ? 'Mit Aufzug' : 'Ohne Aufzug'}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Entladeadresse (Einzug):</span>
+                                    <span className="font-medium whitespace-pre-line text-gray-900">{toAddress || 'Keine Angabe'}</span>
+                                    <span className="text-xs text-gray-600 mt-0.5 font-semibold">
+                                        {floorTo ? `${floorTo}. OG` : 'EG/Erdgeschoss'} | {elevatorTo ? 'Mit Aufzug' : 'Ohne Aufzug'}
+                                    </span>
                                 </div>
                             </div>
                         </div>

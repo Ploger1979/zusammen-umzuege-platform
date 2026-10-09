@@ -48,3 +48,25 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ success: false, error: 'Interner Serverfehler' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const session = await getAdminSession();
+        if (!session || session.role !== 'superadmin') {
+            return NextResponse.json({ success: false, error: 'Nur der SuperAdmin darf Angebote löschen' }, { status: 403 });
+        }
+
+        await dbConnect();
+        const { id } = await params;
+
+        const deleted = await Offer.findByIdAndDelete(id);
+        if (!deleted) {
+            return NextResponse.json({ success: false, error: 'Offer not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true, message: 'Angebot erfolgreich gelöscht' });
+    } catch (error: any) {
+        console.error('Offer API DELETE Error:', error);
+        return NextResponse.json({ success: false, error: 'Interner Serverfehler' }, { status: 500 });
+    }
+}

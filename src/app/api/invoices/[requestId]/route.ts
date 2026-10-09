@@ -35,8 +35,8 @@ export async function DELETE(
 ) {
     try {
         const session = await getAdminSession();
-        if (!session || (session.role !== 'admin' && session.role !== 'superadmin')) {
-            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+        if (!session || session.role !== 'superadmin') {
+            return NextResponse.json({ success: false, error: 'Nur der SuperAdmin darf Rechnungen löschen' }, { status: 403 });
         }
 
         await dbConnect();

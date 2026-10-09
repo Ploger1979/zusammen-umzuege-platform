@@ -39,6 +39,7 @@ const requestSchema = z.object({
         label: z.string().optional()
     })).optional().default([]),
     message: z.string().max(5000).optional(),
+    inventoryText: z.string().max(10000).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -67,7 +68,8 @@ export async function POST(req: NextRequest) {
             details
         });
 
-        const whatsappMsg = `📦 *Neue große Umzugsanfrage!* 📦\n\n👤 *Kunde:* ${result.data.customer.firstName} ${result.data.customer.lastName}\n📞 *Telefon:* ${result.data.customer.phone}\n🏠 *Von:* ${result.data.addresses?.from || 'N/A'}\n🏢 *Nach:* ${result.data.addresses?.to || 'N/A'}\n\nBitte im Admin-Dashboard prüfen!`;
+        const invSnippet = result.data.inventoryText ? `\n🛋️ *Möbel:* ${result.data.inventoryText.slice(0, 150)}...` : '';
+        const whatsappMsg = `📦 *Neue Umzugsanfrage!* 📦\n\n👤 *Kunde:* ${result.data.customer.firstName} ${result.data.customer.lastName}\n📞 *Telefon:* ${result.data.customer.phone}\n🏠 *Von:* ${result.data.addresses?.from || 'N/A'}\n🏢 *Nach:* ${result.data.addresses?.to || 'N/A'}${invSnippet}\n\nBitte im Admin-Dashboard prüfen!`;
         await sendWhatsAppNotification(whatsappMsg);
 
         return NextResponse.json({ success: true, id: newRequest._id }, { status: 201 });
