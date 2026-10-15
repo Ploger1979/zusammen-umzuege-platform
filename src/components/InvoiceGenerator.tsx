@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Printer, Download, Plus, Trash2, RotateCcw, FileText, Layers, Save, ArrowLeft, Shield, Truck, Navigation } from 'lucide-react';
+import { Printer, Download, Plus, Trash2, RotateCcw, FileText, Layers, Save, ArrowLeft, Shield, Truck, Navigation, Loader2 } from 'lucide-react';
 import { logout } from '@/app/actions/auth';
 import Cookies from 'js-cookie';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -139,6 +139,7 @@ export default function InvoiceGenerator() {
     const [companyTaxId, setCompanyTaxId] = useState('040 805 34168');
 
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
     const [items, setItems] = useState<InvoiceItem[]>([
         { id: '1', description: t('movingService'), qty: 1, price: 0 }
@@ -220,6 +221,70 @@ export default function InvoiceGenerator() {
         window.print();
     };
 
+    const handleDownloadPDF = async () => {
+        const invoiceEl = document.getElementById('invoice');
+        if (!invoiceEl) {
+            alert('Rechnungselement nicht gefunden');
+            return;
+        }
+
+        try {
+            setIsGeneratingPDF(true);
+            const { jsPDF } = await import('jspdf');
+            // Use html2canvas-pro which natively supports modern CSS Color 4 functions (lab, oklch)
+            const html2canvasModule = await import('html2canvas-pro');
+            const html2canvas = (html2canvasModule as any).default || html2canvasModule;
+
+            const canvas = await html2canvas(invoiceEl, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                windowWidth: 1200,
+                onclone: (clonedDoc: Document) => {
+                    const clonedInvoice = clonedDoc.getElementById('invoice');
+                    if (clonedInvoice) {
+                        clonedInvoice.style.zoom = '1';
+                        clonedInvoice.style.transform = 'none';
+                        clonedInvoice.style.boxShadow = 'none';
+                        clonedInvoice.style.margin = '0';
+                    }
+                }
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = 210;
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            if (pdfHeight <= 297) {
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            } else {
+                let heightLeft = pdfHeight;
+                let position = 0;
+                const pageHeight = 297;
+
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft > 0) {
+                    position = heightLeft - pdfHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pageHeight;
+                }
+            }
+
+            const safeInvoiceNr = (invoiceNr || 'RE-Entwurf').replace(/[^a-zA-Z0-9-_]/g, '_');
+            pdf.save(`Rechnung_${safeInvoiceNr}.pdf`);
+        } catch (error) {
+            console.error('Fehler bei der PDF-Erstellung:', error);
+            alert('Fehler bei der PDF-Erstellung. Bitte versuchen Sie es erneut.');
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
     const resetForm = () => {
         if (confirm('Reset form?')) {
             setCustomerName('');
@@ -281,17 +346,37 @@ export default function InvoiceGenerator() {
                     {/* Action Buttons */}
                     <button
                         onClick={handleSave}
-                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition transform hover:scale-105"
+                        className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition transform hover:scale-105"
                     >
                         <Save size={18} />
                         <span className="hidden sm:inline">Speichern</span>
                     </button>
                     <button
+                        onClick={handleDownloadPDF}
+                        disabled={isGeneratingPDF}
+                        className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
+                        title="PDF herunterladen"
+                    >
+                        {isGeneratingPDF ? (
+                            <>
+                                <Loader2 size={18} className="animate-spin" />
+                                <span className="hidden sm:inline">PDF wird erstellt...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Download size={18} />
+                                <span className="hidden sm:inline">PDF herunterladen</span>
+                                <span className="sm:hidden">PDF</span>
+                            </>
+                        )}
+                    </button>
+                    <button
                         onClick={handlePrint}
-                        className="px-6 py-2 bg-[#FFC107] hover:bg-[#ffb300] text-black font-bold rounded-lg shadow-lg flex items-center gap-2 transition transform hover:scale-105"
+                        className="px-5 py-2 bg-[#FFC107] hover:bg-[#ffb300] text-black font-bold rounded-lg shadow-lg flex items-center gap-2 transition transform hover:scale-105"
+                        title="Drucken"
                     >
                         <Printer size={18} />
-                        <span className="hidden sm:inline">Drucken / PDF</span>
+                        <span className="hidden sm:inline">Drucken</span>
                         <span className="sm:hidden">Drucken</span>
                     </button>
                 </div>
@@ -485,14 +570,24 @@ export default function InvoiceGenerator() {
                     {/* Floating Mobile Action Buttons */}
                     <div className="lg:hidden fixed bottom-6 right-6 z-50 print:hidden flex flex-col gap-3">
                         <button 
+                            onClick={handleDownloadPDF}
+                            disabled={isGeneratingPDF}
+                            className="bg-blue-600 p-4 rounded-full shadow-xl flex items-center justify-center text-white transform hover:scale-110 transition-transform disabled:opacity-60"
+                            title="PDF herunterladen"
+                        >
+                            {isGeneratingPDF ? <Loader2 size={24} className="animate-spin" /> : <Download size={24} />}
+                        </button>
+                        <button 
                             onClick={handlePrint} 
                             className="bg-[#FFC107] p-4 rounded-full shadow-xl flex items-center justify-center text-black transform hover:scale-110 transition-transform"
+                            title="Drucken"
                         >
                             <Printer size={24} />
                         </button>
                         <button 
                             onClick={handleSave} 
                             className="bg-green-600 p-4 rounded-full shadow-xl flex items-center justify-center text-white transform hover:scale-110 transition-transform"
+                            title="Speichern"
                         >
                             <Save size={24} />
                         </button>
@@ -707,3 +802,4 @@ export default function InvoiceGenerator() {
         </div>
     );
 }
+

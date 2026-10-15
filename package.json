@@ -19,6 +19,7 @@
     "core-js": "^3.49.0",
     "framer-motion": "^12.26.2",
     "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.5.2",
     "jose": "^6.2.3",
     "js-cookie": "^3.0.5",
     "jspdf": "^4.2.1",
